@@ -1,13 +1,14 @@
 {
   "delivery": {
-    "mode": "local",
+    "mode": "pr",
+    "baseBranch": "main",
     "branchPrefix": "prd",
     "staging": {
       "include": [],
       "exclude": []
     },
     "ci": {
-      "watch": false,
+      "watch": true,
       "maxFixAttempts": 2,
       "timeoutSeconds": 240
     }
@@ -20,5 +21,8 @@
   },
   "execution": {
     "parallel": false
+  },
+  "review": {
+    "profile": "auto"
   }
 }
