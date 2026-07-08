@@ -19,7 +19,7 @@ wait "$pid" 2>/dev/null || true
 pid=$!
 sleep 2
 screencapture -x "$OUT_DIR/overlay-full.png"
-sips -c 650 740 --cropOffset 115 590 "$OUT_DIR/overlay-full.png" --out "$OUT_DIR/overlay.png" >/dev/null
+sips -c 240 520 --cropOffset 45 700 "$OUT_DIR/overlay-full.png" --out "$OUT_DIR/overlay.png" >/dev/null
 rm -f "$OUT_DIR/overlay-full.png"
 kill "$pid" 2>/dev/null || true
 wait "$pid" 2>/dev/null || true

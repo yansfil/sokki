@@ -11,7 +11,8 @@ The app has two build paths:
 The product logic lives in `VoiceSlaveCore` so privacy, mode gating, insertion,
 history, vocabulary, and latency behavior can be tested without a GUI session.
 The `VoiceSlave` executable provides the AppKit/SwiftUI menu bar shell, Settings
-window, recording overlay, and macOS runtime adapters.
+window, configurable global shortcut, top-center recording overlay, and macOS
+runtime adapters.
 
 ## Try The App
 
@@ -19,6 +20,10 @@ window, recording overlay, and macOS runtime adapters.
 ./scripts/package-app.sh
 open dist/VoiceSlave.app
 ```
+
+Open `VS` in the menu bar, choose `Settings`, and set `Global Shortcut`. The
+default is `control+option+space`; pressing it toggles the recording overlay at
+the top center of the screen.
 
 For the full setup flow, screenshots, permissions, and troubleshooting, read
 [docs/onboarding.md](docs/onboarding.md).

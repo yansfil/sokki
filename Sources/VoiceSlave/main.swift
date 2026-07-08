@@ -15,11 +15,16 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate {
     private var overlayWindow: NSWindow?
     private let settings = ObservableSettings()
     private let modeGate = ModeGate()
+    private let shortcutMonitor = GlobalShortcutMonitor()
     private let launchArguments = Set(CommandLine.arguments.dropFirst())
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        settings.onShortcutChanged = { [weak self] shortcut in
+            self?.installGlobalShortcut(shortcut)
+        }
         installMenuBar()
+        installGlobalShortcut(settings.state.globalShortcut)
         if launchArguments.contains("--show-settings") {
             openSettings()
         }
@@ -34,12 +39,22 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.toolTip = "VoiceSlave"
 
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Start Dictation", action: #selector(toggleRecording), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Start/Stop Dictation", action: #selector(toggleRecording), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit VoiceSlave", action: #selector(quit), keyEquivalent: "q"))
         statusItem.menu = menu
         self.statusItem = statusItem
+    }
+
+    private func installGlobalShortcut(_ shortcut: String) {
+        if let registered = shortcutMonitor.start(shortcutText: shortcut, action: { [weak self] in
+            self?.toggleRecording()
+        }) {
+            settings.shortcutRegistrationStatus = "Registered: \(registered.displayName)"
+        } else {
+            settings.shortcutRegistrationStatus = "Invalid shortcut"
+        }
     }
 
     @objc private func toggleRecording() {
@@ -70,22 +85,38 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showOverlay(status: String, mode: String) {
+        if overlayWindow != nil {
+            overlayWindow?.makeKeyAndOrderFront(nil)
+            return
+        }
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 360, height: 136),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
-        window.level = .floating
+        window.level = .statusBar
+        window.collectionBehavior = [.canJoinAllSpaces, .transient]
         window.isOpaque = false
         window.backgroundColor = .clear
-        window.contentView = NSHostingView(rootView: RecordingOverlay(status: status, mode: mode) { [weak self] in
+        window.hasShadow = true
+        window.contentView = NSHostingView(rootView: RecordingOverlay(status: status, mode: mode, shortcut: settings.state.globalShortcut) { [weak self] in
             self?.overlayWindow?.close()
             self?.overlayWindow = nil
         })
-        window.center()
-        window.makeKeyAndOrderFront(nil)
+        positionOverlay(window)
+        window.orderFrontRegardless()
         overlayWindow = window
+    }
+
+    private func positionOverlay(_ window: NSWindow) {
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        let frame = screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+        let windowSize = window.frame.size
+        let x = frame.midX - (windowSize.width / 2)
+        let y = frame.maxY - windowSize.height - 28
+        window.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
     @objc private func quit() {
@@ -95,10 +126,46 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate {
 
 @MainActor
 final class ObservableSettings: ObservableObject {
-    @Published var state = AppSettings()
+    private let store = UserDefaultsSettingsStore()
+    var onShortcutChanged: ((String) -> Void)?
+
+    @Published var state: AppSettings {
+        didSet {
+            store.save(state)
+            if oldValue.globalShortcut != state.globalShortcut {
+                onShortcutChanged?(state.globalShortcut)
+            }
+        }
+    }
     @Published var permissions = PermissionSnapshot()
     @Published var model = ModelSetupState()
     @Published var apiKeyState: APIKeyState = .absent
+    @Published var shortcutRegistrationStatus = ""
+
+    init() {
+        self.state = store.load()
+    }
+
+    func resetShortcut() {
+        state.globalShortcut = AppSettings().globalShortcut
+    }
+}
+
+struct UserDefaultsSettingsStore {
+    private let key = "VoiceSlave.AppSettings.v1"
+
+    func load() -> AppSettings {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let settings = try? JSONDecoder().decode(AppSettings.self, from: data) else {
+            return AppSettings()
+        }
+        return settings
+    }
+
+    func save(_ settings: AppSettings) {
+        guard let data = try? JSONEncoder().encode(settings) else { return }
+        UserDefaults.standard.set(data, forKey: key)
+    }
 }
 
 struct SettingsView: View {
@@ -111,12 +178,19 @@ struct SettingsView: View {
                 Toggle("Launch at Login", isOn: $settings.state.launchAtLogin)
                 Toggle("Preload model for faster dictation", isOn: $settings.state.preloadModel)
                 Toggle("Typing Mode", isOn: $settings.state.typingModeEnabled)
+                TextField("Global Shortcut", text: $settings.state.globalShortcut)
                 Picker("Mode", selection: $settings.state.selectedMode) {
                     ForEach(DictationMode.allCases, id: \.self) { mode in
                         Text(mode.rawValue).tag(mode)
                     }
                 }
-                Text("Shortcut: \(settings.state.globalShortcut)")
+                HStack {
+                    Text(settings.shortcutRegistrationStatus)
+                    Spacer()
+                    Button("Reset Shortcut") {
+                        settings.resetShortcut()
+                    }
+                }
                 Text("Bundle ID: \(settings.state.bundleIdentifier)")
             }
             .padding()
@@ -154,23 +228,35 @@ struct SettingsView: View {
 struct RecordingOverlay: View {
     var status: String
     var mode: String
+    var shortcut: String
     var stop: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(status)
-                    .font(.headline)
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 10, height: 10)
+                    Text(status)
+                        .font(.headline)
+                }
                 Spacer()
                 Text(mode)
                     .font(.subheadline)
             }
+            Text("Listening locally")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             WaveformView()
                 .frame(height: 36)
             HStack {
                 Text("00:00")
                     .monospacedDigit()
                 Spacer()
+                Text(shortcut)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Button("Stop", action: stop)
                 Button("Cancel", action: stop)
             }

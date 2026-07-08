@@ -6,6 +6,123 @@ import Security
 import ServiceManagement
 import VoiceSlaveCore
 
+struct KeyboardShortcut: Equatable {
+    let keyCode: UInt16
+    let modifiers: NSEvent.ModifierFlags
+    let displayName: String
+
+    static func parse(_ value: String) -> KeyboardShortcut? {
+        let parts = value
+            .split(separator: "+")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+        guard !parts.isEmpty else { return nil }
+
+        var modifiers: NSEvent.ModifierFlags = []
+        var keyName: String?
+        for part in parts {
+            switch part {
+            case "command", "cmd", "⌘":
+                modifiers.insert(.command)
+            case "control", "ctrl", "⌃":
+                modifiers.insert(.control)
+            case "option", "alt", "⌥":
+                modifiers.insert(.option)
+            case "shift", "⇧":
+                modifiers.insert(.shift)
+            default:
+                guard keyName == nil else { return nil }
+                keyName = part
+            }
+        }
+
+        guard let keyName, let keyCode = keyCodes[keyName], !modifiers.isEmpty else {
+            return nil
+        }
+        return KeyboardShortcut(
+            keyCode: keyCode,
+            modifiers: modifiers,
+            displayName: displayName(modifiers: modifiers, keyName: keyName)
+        )
+    }
+
+    private static let keyCodes: [String: UInt16] = [
+        "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7,
+        "c": 8, "v": 9, "b": 11, "q": 12, "w": 13, "e": 14, "r": 15,
+        "y": 16, "t": 17, "1": 18, "2": 19, "3": 20, "4": 21, "6": 22,
+        "5": 23, "=": 24, "9": 25, "7": 26, "-": 27, "8": 28, "0": 29,
+        "]": 30, "o": 31, "u": 32, "[": 33, "i": 34, "p": 35, "return": 36,
+        "enter": 36, "l": 37, "j": 38, "'": 39, "k": 40, ";": 41, "\\": 42,
+        ",": 43, "/": 44, "n": 45, "m": 46, ".": 47, "tab": 48,
+        "space": 49, "`": 50, "escape": 53, "esc": 53
+    ]
+
+    private static func displayName(modifiers: NSEvent.ModifierFlags, keyName: String) -> String {
+        var pieces: [String] = []
+        if modifiers.contains(.control) { pieces.append("Control") }
+        if modifiers.contains(.option) { pieces.append("Option") }
+        if modifiers.contains(.shift) { pieces.append("Shift") }
+        if modifiers.contains(.command) { pieces.append("Command") }
+        pieces.append(keyName == "space" ? "Space" : keyName.uppercased())
+        return pieces.joined(separator: " + ")
+    }
+}
+
+@MainActor
+final class GlobalShortcutMonitor {
+    private var globalMonitor: Any?
+    private var localMonitor: Any?
+    private var shortcut: KeyboardShortcut?
+    private var action: (() -> Void)?
+
+    func start(shortcutText: String, action: @escaping () -> Void) -> KeyboardShortcut? {
+        stop()
+        guard let shortcut = KeyboardShortcut.parse(shortcutText) else {
+            return nil
+        }
+        self.shortcut = shortcut
+        self.action = action
+
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            DispatchQueue.main.async {
+                self?.handle(event)
+            }
+        }
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if self?.matches(event) == true {
+                self?.action?()
+                return nil
+            }
+            return event
+        }
+        return shortcut
+    }
+
+    func stop() {
+        if let globalMonitor {
+            NSEvent.removeMonitor(globalMonitor)
+        }
+        if let localMonitor {
+            NSEvent.removeMonitor(localMonitor)
+        }
+        globalMonitor = nil
+        localMonitor = nil
+        shortcut = nil
+        action = nil
+    }
+
+    private func handle(_ event: NSEvent) {
+        guard matches(event) else { return }
+        action?()
+    }
+
+    private func matches(_ event: NSEvent) -> Bool {
+        guard let shortcut, !event.isARepeat else { return false }
+        let activeModifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
+        return event.keyCode == shortcut.keyCode && activeModifiers == shortcut.modifiers
+    }
+}
+
 struct MacPermissionReader {
     func snapshot(modelSetupComplete: Bool) -> PermissionSnapshot {
         PermissionSnapshot(

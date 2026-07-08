@@ -43,7 +43,7 @@ Signing, notarization, and DMG packaging are intentionally separate release step
 1. Launch `VoiceSlave.app`.
 2. Find `VS` in the menu bar.
 3. Open `VS` -> `Settings`.
-4. Confirm the default shortcut and mode.
+4. Set `Global Shortcut` or keep the default `control+option+space`.
 5. Keep `Preload model for faster dictation` enabled for lower warm-path latency.
 
 ![Settings](assets/screenshots/settings.png)
@@ -66,9 +66,10 @@ Normal dictation should stay blocked until microphone, accessibility, and model 
 
 1. Choose `Dictation` mode for fully local cleanup and insertion.
 2. Press the configured shortcut or choose `Start Dictation` from the `VS` menu.
-3. Speak a Korean-English/code mixed phrase.
-4. Press Stop in the overlay.
-5. VoiceSlave inserts text at the current cursor through clipboard paste and then best-effort restores the previous clipboard.
+3. Confirm the top-center overlay shows the local recording state.
+4. Speak a Korean-English/code mixed phrase.
+5. Press Stop in the overlay.
+6. VoiceSlave inserts text at the current cursor through clipboard paste and then best-effort restores the previous clipboard.
 
 ![Recording overlay](assets/screenshots/overlay.png)
 
