@@ -1,6 +1,6 @@
 # VoiceSlave Onboarding Guide
 
-VoiceSlave is a local-first macOS menu bar dictation app. The app is intentionally a background utility: after launch, look for `VS` in the macOS menu bar instead of the Dock.
+VoiceSlave is a local-first macOS menu bar dictation app. The app is intentionally a background utility: after launch, look for the microphone icon in the macOS menu bar instead of the Dock.
 
 ## Install From Source
 
@@ -40,55 +40,50 @@ Signing, notarization, and DMG packaging are intentionally separate release step
 
 ## First Launch
 
-1. Launch `VoiceSlave.app`.
-2. Find `VS` in the menu bar.
-3. Open `VS` -> `Settings`.
-4. Set `Global Shortcut` or keep the default `control+option+space`.
-5. Keep `Preload model for faster dictation` enabled for lower warm-path latency.
+1. Launch `VoiceSlave.app`. A welcome window opens automatically on first run.
+2. Grant **Microphone** and **Speech Recognition** when prompted — these are required to dictate.
+3. Grant **Accessibility** so results are pasted directly at your cursor. Without it, results are copied to the clipboard instead (the HUD tells you to press ⌘V).
+4. Try a dictation in the built-in test field, then click **Start using VoiceSlave**.
+
+The global shortcut (`⌃⌥Space` by default) works immediately — it needs no permissions at all.
 
 ![Settings](assets/screenshots/settings.png)
 
-## Permissions
-
-VoiceSlave needs:
-
-- Microphone permission to record local dictation audio.
-- Accessibility permission for global shortcut handling and optional Typing Mode.
-
-Open macOS System Settings:
-
-- Privacy & Security -> Microphone -> enable VoiceSlave.
-- Privacy & Security -> Accessibility -> enable VoiceSlave.
-
-Normal dictation should stay blocked until microphone, accessibility, and model setup are ready.
-
 ## Dictation Flow
 
-1. Choose `Dictation` mode for fully local cleanup and insertion.
-2. Press the configured shortcut or choose `Start Dictation` from the `VS` menu.
-3. Confirm the top-center overlay shows the local recording state.
-4. Speak a Korean-English/code mixed phrase.
-5. Press Stop in the overlay.
-6. VoiceSlave inserts text at the current cursor through clipboard paste and then best-effort restores the previous clipboard.
+1. Put your cursor where the text should go — any app.
+2. Press `⌃⌥Space` (tap to toggle) **or** hold it, speak, and release (push-to-talk).
+3. The recording pill appears at the bottom of the screen with a live waveform, elapsed time, and the live transcript as you speak.
+4. Tap the shortcut again (or release, in push-to-talk) — the pill flips to "Transcribing…", then the text is pasted at your cursor and the pill shows `Inserted · 0.8s`.
+5. Press `esc` at any time while recording to cancel.
 
-![Recording overlay](assets/screenshots/overlay.png)
+![Recording pill](assets/screenshots/overlay.png)
+
+Recognition runs on-device via Apple Speech when available (private, offline). Set the language explicitly in Settings → Dictation if you don't want the system locale — 한국어, English, 日本語, and more.
+
+## Vocabulary & Replacements
+
+Settings → Vocabulary fixes words the recognizer keeps getting wrong ("보이스 슬레이브" → "VoiceSlave"). Matching is case-insensitive; the replacement is inserted exactly as written. Entries are also fed to the recognizer as vocabulary hints.
 
 ## Cloud Modes
 
-`Cleanup` and `Prompt` are visible but disabled until an OpenAI API key is available. When enabled, cloud post-processing sends only:
+`Cleanup` and `Prompt` post-process the transcript with OpenAI and stay disabled until you save an API key (Settings → AI Modes; stored only in your macOS Keychain). When enabled, cloud post-processing sends only:
 
 - raw transcript text
 - explicit Personal Vocabulary hints
 
-VoiceSlave must not send audio, clipboard contents, selected text, cursor surroundings, active app context, or app names.
+VoiceSlave must not send audio, clipboard contents, selected text, cursor surroundings, active app context, or app names. If the cloud call fails or times out, the locally cleaned transcript is inserted instead and history marks the entry "AI fallback".
 
 ## History And Deletion
 
-History stores local SQLite metadata and local audio-file references under Application Support. The app excludes the history directory from iCloud backup and supports individual delete, full delete, and optional retention cleanup.
+Settings → History keeps every dictation (raw transcript, final output, mode, optional audio) in local SQLite under Application Support, excluded from backups. Search, copy, delete individual entries, delete everything, or pick a retention window — the default deletes entries older than 30 days automatically. Audio capture can be turned off entirely in Settings → Dictation.
 
 ## Troubleshooting
 
-- No `VS` item: make sure the app is running with `open dist/VoiceSlave.app`.
-- Permission still denied: quit and reopen VoiceSlave after toggling macOS permission switches.
-- Paste-hostile app: enable Typing Mode in Settings.
+- No menu bar icon: make sure the app is running with `open dist/VoiceSlave.app`.
+- Shortcut does nothing: another app may own it — pick a different one in Settings → General (click the shortcut field and press new keys).
+- "Copied — press ⌘V" instead of auto-paste: grant Accessibility in Settings → Setup, then dictate again.
+- Waveform is flat while recording: microphone permission is missing or the wrong input device is selected in macOS Sound settings.
+- Paste-hostile app (secure fields, some terminals): switch Insert method to "Type characters" in Settings → General.
+- Permission still denied after granting: quit and reopen VoiceSlave.
 - Sharing with another Mac: use Xcode archive/export with Developer ID signing and notarization first.

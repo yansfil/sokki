@@ -126,8 +126,8 @@ let tests: [(String, () throws -> Void)] = [
             timestamp: Date(),
             audioFileName: "new.wav"
         )
-        try store.add(old)
-        try store.add(recent)
+        try store.add(old, audioData: Data("fixture-audio".utf8))
+        try store.add(recent, audioData: Data("fixture-audio".utf8))
         try require(try store.all().count == 2, "history row count mismatch")
         try require(FileManager.default.fileExists(atPath: store.audioDirectory.appendingPathComponent("new.wav").path), "audio fixture missing")
         try require(try store.applyRetention(days: 7) == 1, "retention did not delete old row")
@@ -178,9 +178,41 @@ let tests: [(String, () throws -> Void)] = [
         try require(abs(summary.p50 - 1.1) < 0.001, "p50 mismatch")
         try require(abs(summary.p95 - 1.8) < 0.001, "p95 mismatch")
     }),
-    ("permission snapshot blocks until ready", {
-        try require(!PermissionSnapshot(microphone: .granted, accessibility: .denied, modelSetupComplete: true).canDictate, "should block without accessibility")
-        try require(PermissionSnapshot(microphone: .granted, accessibility: .granted, modelSetupComplete: true).canDictate, "should allow ready state")
+    ("permission snapshot separates dictation from insertion", {
+        try require(!PermissionSnapshot(microphone: .granted, speechRecognition: .denied).canDictate, "should block without speech recognition")
+        try require(!PermissionSnapshot(microphone: .denied, speechRecognition: .granted).canDictate, "should block without microphone")
+        try require(PermissionSnapshot(microphone: .granted, speechRecognition: .granted).canDictate, "mic + speech should allow dictation")
+        try require(!PermissionSnapshot(accessibility: .denied).canInsert, "should block insertion without accessibility")
+        try require(PermissionSnapshot(accessibility: .granted).canInsert, "accessibility should allow insertion")
+    }),
+    ("replacement engine applies vocabulary case-insensitively", {
+        let vocabulary = [
+            VocabularyEntry(spokenHint: "보이스 슬레이브", preferredSpelling: "VoiceSlave"),
+            VocabularyEntry(spokenHint: "open ai", preferredSpelling: "OpenAI")
+        ]
+        let output = ReplacementEngine().apply("보이스 슬레이브 연동은 Open AI 기반", vocabulary: vocabulary)
+        try require(output == "VoiceSlave 연동은 OpenAI 기반", "replacement mismatch: \(output)")
+    }),
+    ("pipeline applies replacements in local dictation mode", {
+        let result = DictationPipeline().process(
+            rawTranscript: "  보이스 슬레이브 테스트  ",
+            mode: .dictation,
+            apiKeyState: .absent,
+            vocabulary: [VocabularyEntry(spokenHint: "보이스 슬레이브", preferredSpelling: "VoiceSlave")]
+        )
+        try require(result.finalOutput == "VoiceSlave 테스트", "dictation replacement mismatch: \(result.finalOutput)")
+        try require(result.status == .inserted, "dictation status mismatch")
+    }),
+    ("settings decode tolerates missing new fields", {
+        let legacyJSON = """
+        {"launchAtLogin":false,"preloadModel":true,"typingModeEnabled":false,
+         "selectedMode":"Dictation","openAIModel":"gpt-5.4-nano","qualityModel":"gpt-5.4-mini",
+         "globalShortcut":"control+option+space","bundleIdentifier":"com.hoyeon.VoiceSlave"}
+        """
+        let settings = try JSONDecoder().decode(AppSettings.self, from: Data(legacyJSON.utf8))
+        try require(settings.launchAtLogin == false, "legacy field lost")
+        try require(settings.localeIdentifier == "auto", "new field default missing")
+        try require(settings.retentionDays == 30, "retention default missing")
     }),
     ("model defaults use WhisperKit turbo class and fallbacks", {
         let state = ModelSetupState()

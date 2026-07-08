@@ -8,18 +8,18 @@ APP_PATH="$(./scripts/package-app.sh | tail -n 1)"
 
 "$APP_PATH/Contents/MacOS/VoiceSlave" --show-settings > /tmp/voiceslave-settings.log 2>&1 &
 pid=$!
-sleep 2
+sleep 2.5
 screencapture -x "$OUT_DIR/settings-full.png"
-sips -c 650 740 --cropOffset 115 590 "$OUT_DIR/settings-full.png" --out "$OUT_DIR/settings.png" >/dev/null
+sips -c 620 760 --cropOffset 195 580 "$OUT_DIR/settings-full.png" --out "$OUT_DIR/settings.png" >/dev/null
 rm -f "$OUT_DIR/settings-full.png"
 kill "$pid" 2>/dev/null || true
 wait "$pid" 2>/dev/null || true
 
-"$APP_PATH/Contents/MacOS/VoiceSlave" --show-settings --show-overlay > /tmp/voiceslave-overlay.log 2>&1 &
+"$APP_PATH/Contents/MacOS/VoiceSlave" --show-overlay > /tmp/voiceslave-overlay.log 2>&1 &
 pid=$!
-sleep 2
+sleep 2.5
 screencapture -x "$OUT_DIR/overlay-full.png"
-sips -c 240 520 --cropOffset 45 700 "$OUT_DIR/overlay-full.png" --out "$OUT_DIR/overlay.png" >/dev/null
+sips -c 200 720 --cropOffset 860 600 "$OUT_DIR/overlay-full.png" --out "$OUT_DIR/overlay.png" >/dev/null
 rm -f "$OUT_DIR/overlay-full.png"
 kill "$pid" 2>/dev/null || true
 wait "$pid" 2>/dev/null || true

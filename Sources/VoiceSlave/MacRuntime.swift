@@ -1,9 +1,11 @@
 import AppKit
 import ApplicationServices
 import AVFoundation
+import Carbon.HIToolbox
 import Foundation
 import Security
 import ServiceManagement
+import Speech
 import VoiceSlaveCore
 
 struct KeyboardShortcut: Equatable {
@@ -46,6 +48,54 @@ struct KeyboardShortcut: Equatable {
         )
     }
 
+    /// Canonical settings-string for a captured key event,
+    /// e.g. "control+option+space". Returns nil for bare modifiers
+    /// or unknown keys.
+    static func canonicalString(keyCode: UInt16, modifiers: NSEvent.ModifierFlags) -> String? {
+        guard let keyName = keyNames[keyCode] else { return nil }
+        let active = modifiers.intersection([.command, .control, .option, .shift])
+        guard !active.isEmpty else { return nil }
+        var pieces: [String] = []
+        if active.contains(.control) { pieces.append("control") }
+        if active.contains(.option) { pieces.append("option") }
+        if active.contains(.shift) { pieces.append("shift") }
+        if active.contains(.command) { pieces.append("command") }
+        pieces.append(keyName)
+        return pieces.joined(separator: "+")
+    }
+
+    var carbonModifiers: UInt32 {
+        var value: UInt32 = 0
+        if modifiers.contains(.command) { value |= UInt32(cmdKey) }
+        if modifiers.contains(.shift) { value |= UInt32(shiftKey) }
+        if modifiers.contains(.option) { value |= UInt32(optionKey) }
+        if modifiers.contains(.control) { value |= UInt32(controlKey) }
+        return value
+    }
+
+    /// Compact symbol form, e.g. "⌃⌥Space".
+    var compactDisplay: String {
+        var pieces = ""
+        if modifiers.contains(.control) { pieces += "⌃" }
+        if modifiers.contains(.option) { pieces += "⌥" }
+        if modifiers.contains(.shift) { pieces += "⇧" }
+        if modifiers.contains(.command) { pieces += "⌘" }
+        let keyName = Self.keyNames[keyCode] ?? "?"
+        let pretty: String
+        switch keyName {
+        case "space": pretty = "Space"
+        case "return": pretty = "↩"
+        case "tab": pretty = "⇥"
+        case "escape": pretty = "⎋"
+        case "left": pretty = "←"
+        case "right": pretty = "→"
+        case "up": pretty = "↑"
+        case "down": pretty = "↓"
+        default: pretty = keyName.count == 1 ? keyName.uppercased() : keyName.capitalized
+        }
+        return pieces + pretty
+    }
+
     private static let keyCodes: [String: UInt16] = [
         "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7,
         "c": 8, "v": 9, "b": 11, "q": 12, "w": 13, "e": 14, "r": 15,
@@ -54,8 +104,21 @@ struct KeyboardShortcut: Equatable {
         "]": 30, "o": 31, "u": 32, "[": 33, "i": 34, "p": 35, "return": 36,
         "enter": 36, "l": 37, "j": 38, "'": 39, "k": 40, ";": 41, "\\": 42,
         ",": 43, "/": 44, "n": 45, "m": 46, ".": 47, "tab": 48,
-        "space": 49, "`": 50, "escape": 53, "esc": 53
+        "space": 49, "`": 50, "escape": 53, "esc": 53,
+        "f1": 122, "f2": 120, "f3": 99, "f4": 118, "f5": 96, "f6": 97,
+        "f7": 98, "f8": 100, "f9": 101, "f10": 109, "f11": 103, "f12": 111,
+        "left": 123, "right": 124, "down": 125, "up": 126
     ]
+
+    private static let keyNames: [UInt16: String] = {
+        var names: [UInt16: String] = [:]
+        for (name, code) in keyCodes where names[code] == nil {
+            names[code] = name
+        }
+        names[36] = "return"
+        names[53] = "escape"
+        return names
+    }()
 
     private static func displayName(modifiers: NSEvent.ModifierFlags, keyName: String) -> String {
         var pieces: [String] = []
@@ -68,65 +131,11 @@ struct KeyboardShortcut: Equatable {
     }
 }
 
-@MainActor
-final class GlobalShortcutMonitor {
-    private var globalMonitor: Any?
-    private var localMonitor: Any?
-    private var shortcut: KeyboardShortcut?
-    private var action: (() -> Void)?
-
-    func start(shortcutText: String, action: @escaping () -> Void) -> KeyboardShortcut? {
-        stop()
-        guard let shortcut = KeyboardShortcut.parse(shortcutText) else {
-            return nil
-        }
-        self.shortcut = shortcut
-        self.action = action
-
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            DispatchQueue.main.async {
-                self?.handle(event)
-            }
-        }
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if self?.matches(event) == true {
-                self?.action?()
-                return nil
-            }
-            return event
-        }
-        return shortcut
-    }
-
-    func stop() {
-        if let globalMonitor {
-            NSEvent.removeMonitor(globalMonitor)
-        }
-        if let localMonitor {
-            NSEvent.removeMonitor(localMonitor)
-        }
-        globalMonitor = nil
-        localMonitor = nil
-        shortcut = nil
-        action = nil
-    }
-
-    private func handle(_ event: NSEvent) {
-        guard matches(event) else { return }
-        action?()
-    }
-
-    private func matches(_ event: NSEvent) -> Bool {
-        guard let shortcut, !event.isARepeat else { return false }
-        let activeModifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
-        return event.keyCode == shortcut.keyCode && activeModifiers == shortcut.modifiers
-    }
-}
-
 struct MacPermissionReader {
     func snapshot(modelSetupComplete: Bool) -> PermissionSnapshot {
         PermissionSnapshot(
             microphone: microphoneState(),
+            speechRecognition: speechState(),
             accessibility: AXIsProcessTrusted() ? .granted : .denied,
             modelSetupComplete: modelSetupComplete
         )
@@ -136,12 +145,37 @@ struct MacPermissionReader {
         openSettingsPane("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
     }
 
+    func openSpeechRecognitionSettings() {
+        openSettingsPane("x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition")
+    }
+
     func openAccessibilitySettings() {
         openSettingsPane("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
     }
 
+    /// Shows the system accessibility-trust prompt for this app.
+    func promptForAccessibility() {
+        // kAXTrustedCheckOptionPrompt is a global var and not concurrency-safe
+        // to reference under Swift 6; the literal key is ABI-stable.
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
+    }
+
     private func microphoneState() -> PermissionState {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized:
+            return .granted
+        case .denied, .restricted:
+            return .denied
+        case .notDetermined:
+            return .unknown
+        @unknown default:
+            return .unknown
+        }
+    }
+
+    private func speechState() -> PermissionState {
+        switch SFSpeechRecognizer.authorizationStatus() {
         case .authorized:
             return .granted
         case .denied, .restricted:
@@ -218,39 +252,6 @@ struct KeychainError: Error, CustomStringConvertible {
     var status: OSStatus
     var description: String {
         SecCopyErrorMessageString(status, nil) as String? ?? "Keychain error \(status)"
-    }
-}
-
-@MainActor
-final class AudioCaptureController: NSObject, AVAudioRecorderDelegate {
-    private var recorder: AVAudioRecorder?
-
-    func startRecording(to url: URL) throws {
-        try FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44_100,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
-        let recorder = try AVAudioRecorder(url: url, settings: settings)
-        recorder.delegate = self
-        recorder.isMeteringEnabled = true
-        recorder.record()
-        self.recorder = recorder
-    }
-
-    func stopRecording() {
-        recorder?.stop()
-        recorder = nil
-    }
-
-    func currentPower() -> Float {
-        recorder?.updateMeters()
-        return recorder?.averagePower(forChannel: 0) ?? -160
     }
 }
 

@@ -33,6 +33,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var retentionDays: Int?
     public var globalShortcut: String
     public var bundleIdentifier: String
+    public var localeIdentifier: String
+    public var preferOnDevice: Bool
+    public var playSounds: Bool
+    public var storeAudio: Bool
+    public var restoreClipboard: Bool
+    public var hasCompletedOnboarding: Bool
 
     public init(
         launchAtLogin: Bool = true,
@@ -42,9 +48,15 @@ public struct AppSettings: Codable, Equatable, Sendable {
         openAIModel: String = OpenAIModelDefaults.defaultModel,
         qualityModel: String = OpenAIModelDefaults.qualityModel,
         manualModelOverride: String? = nil,
-        retentionDays: Int? = nil,
+        retentionDays: Int? = 30,
         globalShortcut: String = "control+option+space",
-        bundleIdentifier: String = "com.hoyeon.VoiceSlave"
+        bundleIdentifier: String = "com.hoyeon.VoiceSlave",
+        localeIdentifier: String = "auto",
+        preferOnDevice: Bool = true,
+        playSounds: Bool = true,
+        storeAudio: Bool = true,
+        restoreClipboard: Bool = false,
+        hasCompletedOnboarding: Bool = false
     ) {
         self.launchAtLogin = launchAtLogin
         self.preloadModel = preloadModel
@@ -56,6 +68,33 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.retentionDays = retentionDays
         self.globalShortcut = globalShortcut
         self.bundleIdentifier = bundleIdentifier
+        self.localeIdentifier = localeIdentifier
+        self.preferOnDevice = preferOnDevice
+        self.playSounds = playSounds
+        self.storeAudio = storeAudio
+        self.restoreClipboard = restoreClipboard
+        self.hasCompletedOnboarding = hasCompletedOnboarding
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = AppSettings()
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? defaults.launchAtLogin
+        preloadModel = try container.decodeIfPresent(Bool.self, forKey: .preloadModel) ?? defaults.preloadModel
+        typingModeEnabled = try container.decodeIfPresent(Bool.self, forKey: .typingModeEnabled) ?? defaults.typingModeEnabled
+        selectedMode = try container.decodeIfPresent(DictationMode.self, forKey: .selectedMode) ?? defaults.selectedMode
+        openAIModel = try container.decodeIfPresent(String.self, forKey: .openAIModel) ?? defaults.openAIModel
+        qualityModel = try container.decodeIfPresent(String.self, forKey: .qualityModel) ?? defaults.qualityModel
+        manualModelOverride = try container.decodeIfPresent(String.self, forKey: .manualModelOverride)
+        retentionDays = try container.decodeIfPresent(Int.self, forKey: .retentionDays) ?? defaults.retentionDays
+        globalShortcut = try container.decodeIfPresent(String.self, forKey: .globalShortcut) ?? defaults.globalShortcut
+        bundleIdentifier = try container.decodeIfPresent(String.self, forKey: .bundleIdentifier) ?? defaults.bundleIdentifier
+        localeIdentifier = try container.decodeIfPresent(String.self, forKey: .localeIdentifier) ?? defaults.localeIdentifier
+        preferOnDevice = try container.decodeIfPresent(Bool.self, forKey: .preferOnDevice) ?? defaults.preferOnDevice
+        playSounds = try container.decodeIfPresent(Bool.self, forKey: .playSounds) ?? defaults.playSounds
+        storeAudio = try container.decodeIfPresent(Bool.self, forKey: .storeAudio) ?? defaults.storeAudio
+        restoreClipboard = try container.decodeIfPresent(Bool.self, forKey: .restoreClipboard) ?? defaults.restoreClipboard
+        hasCompletedOnboarding = try container.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? defaults.hasCompletedOnboarding
     }
 }
 
@@ -72,21 +111,30 @@ public enum WhisperModelDefaults {
 
 public struct PermissionSnapshot: Equatable, Sendable {
     public var microphone: PermissionState
+    public var speechRecognition: PermissionState
     public var accessibility: PermissionState
     public var modelSetupComplete: Bool
 
     public init(
         microphone: PermissionState = .unknown,
+        speechRecognition: PermissionState = .unknown,
         accessibility: PermissionState = .unknown,
         modelSetupComplete: Bool = false
     ) {
         self.microphone = microphone
+        self.speechRecognition = speechRecognition
         self.accessibility = accessibility
         self.modelSetupComplete = modelSetupComplete
     }
 
+    /// Recording + transcription only needs mic and speech recognition.
     public var canDictate: Bool {
-        microphone == .granted && accessibility == .granted && modelSetupComplete
+        microphone == .granted && speechRecognition == .granted
+    }
+
+    /// Auto-paste into other apps additionally needs accessibility trust.
+    public var canInsert: Bool {
+        accessibility == .granted
     }
 }
 
@@ -246,11 +294,13 @@ public final class HistoryStore: @unchecked Sendable {
         lock.unlock()
     }
 
-    public func add(_ record: HistoryRecord, audioData: Data = Data("fixture-audio".utf8)) throws {
+    public func add(_ record: HistoryRecord, audioData: Data? = nil) throws {
         lock.lock()
         defer { lock.unlock() }
-        let audioURL = audioDirectory.appendingPathComponent(record.audioFileName)
-        try audioData.write(to: audioURL, options: .atomic)
+        if let audioData {
+            let audioURL = audioDirectory.appendingPathComponent(record.audioFileName)
+            try audioData.write(to: audioURL, options: .atomic)
+        }
         let sql = """
         INSERT OR REPLACE INTO history
         (id, rawTranscript, finalOutput, mode, status, timestamp, audioFileName)
@@ -395,6 +445,36 @@ public final class LocalCleanupProcessor: Sendable {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .joined(separator: "\n")
+    }
+}
+
+/// Deterministic post-transcription find/replace driven by the user's
+/// vocabulary table. Matches case-insensitively, outputs the exact
+/// preferred spelling.
+public struct ReplacementEngine: Sendable {
+    public init() {}
+
+    public func apply(_ text: String, vocabulary: [VocabularyEntry]) -> String {
+        var output = text
+        for entry in vocabulary {
+            let hint = entry.spokenHint.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !hint.isEmpty else { continue }
+            var searchRange = output.startIndex..<output.endIndex
+            while let found = output.range(
+                of: hint,
+                options: [.caseInsensitive, .diacriticInsensitive],
+                range: searchRange
+            ) {
+                output.replaceSubrange(found, with: entry.preferredSpelling)
+                let resumeIndex = output.index(
+                    found.lowerBound,
+                    offsetBy: entry.preferredSpelling.count,
+                    limitedBy: output.endIndex
+                ) ?? output.endIndex
+                searchRange = resumeIndex..<output.endIndex
+            }
+        }
+        return output
     }
 }
 
@@ -599,19 +679,34 @@ public struct DictationPipelineResult: Equatable, Sendable {
     public var finalOutput: String
     public var mode: DictationMode
     public var status: HistoryStatus
+
+    public init(
+        rawTranscript: String,
+        finalOutput: String,
+        mode: DictationMode,
+        status: HistoryStatus
+    ) {
+        self.rawTranscript = rawTranscript
+        self.finalOutput = finalOutput
+        self.mode = mode
+        self.status = status
+    }
 }
 
 public struct DictationPipeline: Sendable {
     public var cleanupProcessor: LocalCleanupProcessor
+    public var replacementEngine: ReplacementEngine
     public var requestBuilder: OpenAIRequestBuilder
     public var modeGate: ModeGate
 
     public init(
         cleanupProcessor: LocalCleanupProcessor = LocalCleanupProcessor(),
+        replacementEngine: ReplacementEngine = ReplacementEngine(),
         requestBuilder: OpenAIRequestBuilder = OpenAIRequestBuilder(),
         modeGate: ModeGate = ModeGate()
     ) {
         self.cleanupProcessor = cleanupProcessor
+        self.replacementEngine = replacementEngine
         self.requestBuilder = requestBuilder
         self.modeGate = modeGate
     }
@@ -623,7 +718,10 @@ public struct DictationPipeline: Sendable {
         vocabulary: [VocabularyEntry],
         openAITransform: ((OpenAIRequest) throws -> String)? = nil
     ) -> DictationPipelineResult {
-        let cleaned = cleanupProcessor.clean(rawTranscript)
+        let cleaned = replacementEngine.apply(
+            cleanupProcessor.clean(rawTranscript),
+            vocabulary: vocabulary
+        )
         guard mode != .dictation else {
             return DictationPipelineResult(
                 rawTranscript: rawTranscript,

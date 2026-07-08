@@ -28,6 +28,8 @@
 	<string>Copyright © 2026 Hoyeon. All rights reserved.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>VoiceSlave needs microphone access to record local dictation audio.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>VoiceSlave transcribes your dictation with on-device speech recognition.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>NSSupportsSuddenTermination</key>
