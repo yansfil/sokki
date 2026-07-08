@@ -1,0 +1,24 @@
+{
+  "delivery": {
+    "mode": "local",
+    "branchPrefix": "prd",
+    "staging": {
+      "include": [],
+      "exclude": []
+    },
+    "ci": {
+      "watch": false,
+      "maxFixAttempts": 2,
+      "timeoutSeconds": 240
+    }
+  },
+  "worktree": {
+    "enabled": false,
+    "link": [],
+    "copy": [],
+    "setup": []
+  },
+  "execution": {
+    "parallel": false
+  }
+}

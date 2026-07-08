@@ -1,0 +1,5 @@
+# PRD pipeline artifacts
+.hoyeon/*
+!.hoyeon/config.json
+!.hoyeon/prd/
+!.hoyeon/prd/**
