@@ -9,6 +9,15 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* main.swift */; };
 		A10000000000000000000002 /* MacRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* MacRuntime.swift */; };
+		A10000000000000000000101 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000101 /* AppDelegate.swift */; };
+		A10000000000000000000102 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000102 /* AppModel.swift */; };
+		A10000000000000000000103 /* HotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000103 /* HotKey.swift */; };
+		A10000000000000000000104 /* HUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000104 /* HUD.swift */; };
+		A10000000000000000000105 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000105 /* OnboardingView.swift */; };
+		A10000000000000000000106 /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000106 /* OpenAIClient.swift */; };
+		A10000000000000000000107 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000107 /* RecordingCoordinator.swift */; };
+		A10000000000000000000108 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000108 /* SettingsView.swift */; };
+		A10000000000000000000109 /* SpeechEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000109 /* SpeechEngine.swift */; };
 		A10000000000000000000003 /* VoiceSlaveCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* VoiceSlaveCore.swift */; };
 		A10000000000000000000004 /* VoiceSlaveCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* VoiceSlaveCore.framework */; };
 		A10000000000000000000005 /* VoiceSlaveCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* VoiceSlaveCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -41,6 +50,15 @@
 /* Begin PBXFileReference section */
 		A20000000000000000000001 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* MacRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacRuntime.swift; sourceTree = "<group>"; };
+		A20000000000000000000101 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A20000000000000000000102 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000103 /* HotKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKey.swift; sourceTree = "<group>"; };
+		A20000000000000000000104 /* HUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUD.swift; sourceTree = "<group>"; };
+		A20000000000000000000105 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A20000000000000000000106 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
+		A20000000000000000000107 /* RecordingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCoordinator.swift; sourceTree = "<group>"; };
+		A20000000000000000000108 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000109 /* SpeechEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechEngine.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* VoiceSlaveCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSlaveCore.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* VoiceSlaveCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = VoiceSlaveCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000005 /* VoiceSlave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceSlave.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -91,6 +109,15 @@
 			children = (
 				A20000000000000000000001 /* main.swift */,
 				A20000000000000000000002 /* MacRuntime.swift */,
+				A20000000000000000000101 /* AppDelegate.swift */,
+				A20000000000000000000102 /* AppModel.swift */,
+				A20000000000000000000103 /* HotKey.swift */,
+				A20000000000000000000104 /* HUD.swift */,
+				A20000000000000000000105 /* OnboardingView.swift */,
+				A20000000000000000000106 /* OpenAIClient.swift */,
+				A20000000000000000000107 /* RecordingCoordinator.swift */,
+				A20000000000000000000108 /* SettingsView.swift */,
+				A20000000000000000000109 /* SpeechEngine.swift */,
 			);
 			path = VoiceSlave;
 			sourceTree = "<group>";
@@ -203,6 +230,15 @@
 			files = (
 				A10000000000000000000001 /* main.swift in Sources */,
 				A10000000000000000000002 /* MacRuntime.swift in Sources */,
+				A10000000000000000000101 /* AppDelegate.swift in Sources */,
+				A10000000000000000000102 /* AppModel.swift in Sources */,
+				A10000000000000000000103 /* HotKey.swift in Sources */,
+				A10000000000000000000104 /* HUD.swift in Sources */,
+				A10000000000000000000105 /* OnboardingView.swift in Sources */,
+				A10000000000000000000106 /* OpenAIClient.swift in Sources */,
+				A10000000000000000000107 /* RecordingCoordinator.swift in Sources */,
+				A10000000000000000000108 /* SettingsView.swift in Sources */,
+				A10000000000000000000109 /* SpeechEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
