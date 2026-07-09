@@ -18,8 +18,14 @@ final class AppModel: ObservableObject {
             if oldValue.launchAtLogin != state.launchAtLogin {
                 applyLaunchAtLogin()
             }
+            if oldValue.localeIdentifier != state.localeIdentifier
+                || oldValue.preferOnDevice != state.preferOnDevice {
+                prewarmedLocale = nil
+                prewarmRecognizerIfNeeded()
+            }
         }
     }
+    private var prewarmedLocale: String?
     @Published var permissions = PermissionSnapshot()
     @Published var apiKeyState: APIKeyState = .absent
     @Published var shortcutRegistrationStatus = ""
@@ -44,6 +50,19 @@ final class AppModel: ObservableObject {
 
     func refreshPermissions() {
         permissions = permissionReader.snapshot(modelSetupComplete: true)
+        prewarmRecognizerIfNeeded()
+    }
+
+    /// Loads the recognizer model once speech permission exists, so the first
+    /// real dictation doesn't lose audio to model loading.
+    private func prewarmRecognizerIfNeeded() {
+        guard permissions.speechRecognition == .granted,
+              prewarmedLocale != state.localeIdentifier else { return }
+        prewarmedLocale = state.localeIdentifier
+        SpeechSession.prewarm(
+            localeIdentifier: state.localeIdentifier,
+            preferOnDevice: state.preferOnDevice
+        )
     }
 
     func refreshAPIKeyState() {
@@ -96,13 +115,7 @@ enum DictationLanguage {
     static let options: [(id: String, label: String)] = [
         ("auto", "Automatic (System)"),
         ("ko-KR", "한국어"),
-        ("en-US", "English (US)"),
-        ("en-GB", "English (UK)"),
-        ("ja-JP", "日本語"),
-        ("zh-CN", "中文（简体）"),
-        ("es-ES", "Español"),
-        ("fr-FR", "Français"),
-        ("de-DE", "Deutsch")
+        ("en-US", "English (US)")
     ]
 
     static func label(for id: String) -> String {

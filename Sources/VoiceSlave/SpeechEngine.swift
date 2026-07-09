@@ -1,6 +1,9 @@
 import AVFoundation
 import Foundation
 import Speech
+import os
+
+private let speechLog = Logger(subsystem: "com.hoyeon.VoiceSlave", category: "speech")
 
 enum SpeechSessionError: LocalizedError {
     case recognizerUnavailable(String)
@@ -22,6 +25,12 @@ enum SpeechSessionError: LocalizedError {
 /// Shared state touched from the audio render thread. Kept deliberately tiny:
 /// the recognition request and audio file are both safe to feed from a single
 /// background thread.
+/// Moves a non-Sendable value across a thread hop that is safe by
+/// construction (produced on one queue, consumed once on main).
+private struct UncheckedSendable<T>: @unchecked Sendable {
+    let value: T
+}
+
 private final class AudioTapBox: @unchecked Sendable {
     let request: SFSpeechAudioBufferRecognitionRequest
     let audioFile: AVAudioFile?
@@ -86,6 +95,7 @@ final class SpeechSession {
             request.requiresOnDeviceRecognition = true
             usedOnDevice = true
         }
+        speechLog.info("session start locale=\(locale.identifier, privacy: .public) onDevice=\(self.usedOnDevice)")
         if !contextualStrings.isEmpty {
             request.contextualStrings = contextualStrings
         }
@@ -106,6 +116,8 @@ final class SpeechSession {
 
         let box = AudioTapBox(request: request, audioFile: audioFile)
         self.box = box
+        let sessionBeganAt = Date()
+        let firstBufferLogged = OSAllocatedUnfairLock(initialState: false)
         let levelSink: @Sendable (Float) -> Void = { [weak self] level in
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
@@ -113,7 +125,18 @@ final class SpeechSession {
                 }
             }
         }
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+        // The tap runs on a realtime audio thread. It must be @Sendable so it
+        // does not inherit this class's MainActor isolation — an inherited
+        // isolation assertion crashes (dispatch_assert_queue) off-main.
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { @Sendable buffer, _ in
+            let isFirst = firstBufferLogged.withLock { logged -> Bool in
+                if logged { return false }
+                logged = true
+                return true
+            }
+            if isFirst {
+                speechLog.info("first mic buffer dt=\(Date().timeIntervalSince(sessionBeganAt))s")
+            }
             box.request.append(buffer)
             try? box.audioFile?.write(from: buffer)
             levelSink(Self.normalizedLevel(of: buffer))
@@ -127,12 +150,16 @@ final class SpeechSession {
             self.box = nil
             throw error
         }
+        speechLog.info("engine started dt=\(Date().timeIntervalSince(sessionBeganAt))s")
 
         phase = .running
-        recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
+        // Speech delivers results on a private queue; same @Sendable rule as
+        // the audio tap above.
+        recognitionTask = recognizer.recognitionTask(with: request) { @Sendable [weak self] result, error in
+            let payload = UncheckedSendable(value: (result, error))
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
-                    self?.handleRecognition(result: result, error: error)
+                    self?.handleRecognition(result: payload.value.0, error: payload.value.1)
                 }
             }
         }
@@ -157,6 +184,12 @@ final class SpeechSession {
             }
         }
 
+        if !recognitionEnded {
+            // The streaming session went silent (no results, no error). Cancel
+            // so the zombie task can't starve the next session's speechd slot.
+            speechLog.warning("recognizer never responded; cancelling task")
+            recognitionTask?.cancel()
+        }
         phase = .done
         recognitionTask = nil
         box = nil
@@ -174,7 +207,13 @@ final class SpeechSession {
 
     private func handleRecognition(result: SFSpeechRecognitionResult?, error: Error?) {
         if let result {
+            if latestText.isEmpty && !result.bestTranscription.formattedString.isEmpty {
+                speechLog.info("first partial arrived")
+            }
             latestText = result.bestTranscription.formattedString
+            if result.isFinal {
+                speechLog.info("final transcript length=\(self.latestText.count)")
+            }
             onPartial?(latestText)
             if result.isFinal {
                 recognitionEnded = true
@@ -182,6 +221,7 @@ final class SpeechSession {
             }
         }
         if let error {
+            speechLog.error("recognition error: \(error, privacy: .public)")
             recognitionEnded = true
             if phase == .running {
                 onUnexpectedEnd?(error)
@@ -213,6 +253,96 @@ final class SpeechSession {
         let db = 20 * log10(rms)
         // Map -50dB...0dB → 0...1
         return min(1, max(0, (db + 50) / 50))
+    }
+}
+
+/// Holds a fallback recognition's continuation so it resumes exactly once
+/// (final result, error, or timeout — whichever comes first).
+@MainActor
+private final class OneShotText {
+    private var continuation: CheckedContinuation<String, Never>?
+    var keepAlive: AnyObject?
+
+    init(_ continuation: CheckedContinuation<String, Never>) {
+        self.continuation = continuation
+    }
+
+    func finish(_ text: String) {
+        continuation?.resume(returning: text)
+        continuation = nil
+        keepAlive = nil
+    }
+}
+
+extension SpeechSession {
+    /// Re-recognizes the captured audio file in one shot. Used as a safety
+    /// net when the live streaming session returns nothing — file-based
+    /// recognition is more reliable than a fresh streaming session.
+    static func recognizeFile(
+        at url: URL,
+        localeIdentifier: String,
+        preferOnDevice: Bool,
+        timeout: TimeInterval = 15
+    ) async -> String {
+        guard SFSpeechRecognizer.authorizationStatus() == .authorized else { return "" }
+        let locale = Self.locale(for: localeIdentifier)
+        guard let recognizer = SFSpeechRecognizer(locale: locale), recognizer.isAvailable else { return "" }
+        let request = SFSpeechURLRecognitionRequest(url: url)
+        request.taskHint = .dictation
+        request.addsPunctuation = true
+        if preferOnDevice && recognizer.supportsOnDeviceRecognition {
+            request.requiresOnDeviceRecognition = true
+        }
+        speechLog.info("file fallback recognition start")
+        return await withCheckedContinuation { (continuation: CheckedContinuation<String, Never>) in
+            let oneShot = OneShotText(continuation)
+            oneShot.keepAlive = recognizer
+            recognizer.recognitionTask(with: request) { @Sendable result, error in
+                let payload = UncheckedSendable(value: (result, error))
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated {
+                        if let result = payload.value.0, result.isFinal {
+                            speechLog.info("file fallback final length=\(result.bestTranscription.formattedString.count)")
+                            oneShot.finish(result.bestTranscription.formattedString)
+                        } else if let error = payload.value.1 {
+                            speechLog.error("file fallback error: \(error, privacy: .public)")
+                            oneShot.finish("")
+                        }
+                    }
+                }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                oneShot.finish("")
+            }
+        }
+    }
+
+    /// Loads the recognizer model for the given locale ahead of time. The
+    /// first recognition in a process otherwise spends seconds loading the
+    /// on-device model and silently drops the audio buffered meanwhile —
+    /// which reads as "my first dictation came back empty".
+    static func prewarm(localeIdentifier: String, preferOnDevice: Bool) {
+        guard SFSpeechRecognizer.authorizationStatus() == .authorized else { return }
+        let locale = Self.locale(for: localeIdentifier)
+        guard let recognizer = SFSpeechRecognizer(locale: locale), recognizer.isAvailable else { return }
+        let request = SFSpeechAudioBufferRecognitionRequest()
+        request.shouldReportPartialResults = false
+        if preferOnDevice && recognizer.supportsOnDeviceRecognition {
+            request.requiresOnDeviceRecognition = true
+        }
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1),
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 8000) else { return }
+        buffer.frameLength = 8000
+        request.append(buffer)
+        request.endAudio()
+        speechLog.info("prewarm start locale=\(locale.identifier, privacy: .public)")
+        recognizer.recognitionTask(with: request) { @Sendable result, error in
+            _ = recognizer // keep the recognizer alive until the model has loaded
+            if result?.isFinal == true || error != nil {
+                speechLog.info("prewarm done locale=\(locale.identifier, privacy: .public)")
+            }
+        }
     }
 }
 
