@@ -36,7 +36,18 @@ struct OnboardingView: View {
                 .padding(6)
             }
 
-            GroupBox("2. Try it here") {
+            GroupBox("2. Choose your dictation language") {
+                Picker("", selection: $model.state.localeIdentifier) {
+                    ForEach(DictationLanguage.options, id: \.id) { option in
+                        Text(option.label).tag(option.id)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .padding(6)
+            }
+
+            GroupBox("3. Try it here") {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Click into the field below, press \(shortcutDisplay), say something, then press \(shortcutDisplay) again. Hold-to-talk also works: keep it pressed while speaking and release.")
                         .font(.caption)

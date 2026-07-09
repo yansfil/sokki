@@ -176,9 +176,20 @@ final class RecordingCoordinator: ObservableObject {
         phase = .transcribing
         let stopRequestedAt = Date()
 
-        let rawTranscript = (await session.finish()).trimmingCharacters(in: .whitespacesAndNewlines)
+        var rawTranscript = (await session.finish()).trimmingCharacters(in: .whitespacesAndNewlines)
         let audioFileURL = session.audioFileURL
         self.session = nil
+
+        if rawTranscript.isEmpty, let audioFileURL,
+           FileManager.default.fileExists(atPath: audioFileURL.path) {
+            // The streaming session can come back empty (notably speechd's
+            // first session after launch). Re-recognize the captured audio.
+            rawTranscript = (await SpeechSession.recognizeFile(
+                at: audioFileURL,
+                localeIdentifier: model.state.localeIdentifier,
+                preferOnDevice: model.state.preferOnDevice
+            )).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
 
         guard !rawTranscript.isEmpty else {
             if let audioFileURL {
