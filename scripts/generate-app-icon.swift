@@ -1,6 +1,7 @@
 #!/usr/bin/env swift
-// Renders AppResources/AppIcon.icns: a Big Sur-style squircle with a
-// violet gradient and a white waveform glyph. Run from the repo root:
+// Renders AppResources/AppIcon.icns: a deep-space squircle with a glowing
+// waveform and a thin orbit ring — Sokki's mission-control look. Run from
+// the repo root:
 //   swift scripts/generate-app-icon.swift
 import AppKit
 import CoreGraphics
@@ -31,53 +32,95 @@ func drawIcon(size: CGFloat) -> NSImage {
     context.fillPath()
     context.restoreGState()
 
-    // Violet gradient fill.
     context.saveGState()
     context.addPath(squircle)
     context.clip()
-    let colors = [
-        NSColor(calibratedRed: 0.573, green: 0.361, blue: 0.973, alpha: 1).cgColor, // #925CF8
-        NSColor(calibratedRed: 0.310, green: 0.153, blue: 0.749, alpha: 1).cgColor  // #4F27BF
-    ]
-    let gradient = CGGradient(
+
+    // Deep-space base: near-black indigo falling to violet at the bottom.
+    let space = CGGradient(
         colorsSpace: CGColorSpaceCreateDeviceRGB(),
-        colors: colors as CFArray,
-        locations: [0, 1]
+        colors: [
+            NSColor(calibratedRed: 0.075, green: 0.055, blue: 0.180, alpha: 1).cgColor, // #13112E
+            NSColor(calibratedRed: 0.130, green: 0.075, blue: 0.320, alpha: 1).cgColor, // #211352
+            NSColor(calibratedRed: 0.365, green: 0.200, blue: 0.760, alpha: 1).cgColor  // #5D33C2
+        ] as CFArray,
+        locations: [0, 0.55, 1]
     )!
     context.drawLinearGradient(
-        gradient,
-        start: CGPoint(x: rect.minX, y: rect.maxY),
-        end: CGPoint(x: rect.maxX, y: rect.minY),
+        space,
+        start: CGPoint(x: rect.midX, y: rect.maxY),
+        end: CGPoint(x: rect.midX, y: rect.minY),
         options: []
     )
 
-    // Subtle top highlight.
-    let highlight = CGGradient(
+    // Violet glow pooling behind the waveform.
+    let glow = CGGradient(
         colorsSpace: CGColorSpaceCreateDeviceRGB(),
         colors: [
-            NSColor.white.withAlphaComponent(0.18).cgColor,
-            NSColor.white.withAlphaComponent(0).cgColor
+            NSColor(calibratedRed: 0.62, green: 0.44, blue: 1.0, alpha: 0.55).cgColor,
+            NSColor(calibratedRed: 0.62, green: 0.44, blue: 1.0, alpha: 0).cgColor
         ] as CFArray,
         locations: [0, 1]
     )!
-    context.drawLinearGradient(
-        highlight,
-        start: CGPoint(x: rect.midX, y: rect.maxY),
-        end: CGPoint(x: rect.midX, y: rect.midY),
+    context.drawRadialGradient(
+        glow,
+        startCenter: CGPoint(x: rect.midX, y: rect.midY),
+        startRadius: 0,
+        endCenter: CGPoint(x: rect.midX, y: rect.midY),
+        endRadius: rect.width * 0.52,
         options: []
     )
 
-    // Waveform glyph: five rounded bars, heights relative to the squircle.
-    let barHeights: [CGFloat] = [0.22, 0.40, 0.56, 0.34, 0.18]
-    let barWidth = rect.width * 0.072
-    let barGap = rect.width * 0.052
+    // A few tiny stars in the upper half (invisible at 16px, alive at 512px).
+    let stars: [(x: CGFloat, y: CGFloat, r: CGFloat, a: CGFloat)] = [
+        (0.20, 0.82, 0.006, 0.85), (0.32, 0.70, 0.004, 0.55),
+        (0.71, 0.86, 0.005, 0.75), (0.83, 0.66, 0.004, 0.50),
+        (0.57, 0.90, 0.003, 0.60), (0.13, 0.58, 0.003, 0.40)
+    ]
+    for star in stars {
+        context.setFillColor(NSColor.white.withAlphaComponent(star.a).cgColor)
+        let r = rect.width * star.r
+        context.fillEllipse(in: CGRect(
+            x: rect.minX + rect.width * star.x - r,
+            y: rect.minY + rect.height * star.y - r,
+            width: r * 2, height: r * 2
+        ))
+    }
+
+    // Thin orbit ring sweeping behind the waveform.
+    context.saveGState()
+    context.translateBy(x: rect.midX, y: rect.midY - rect.height * 0.02)
+    context.rotate(by: -0.32)
+    context.scaleBy(x: 1, y: 0.38)
+    let orbitRadius = rect.width * 0.44
+    context.setStrokeColor(NSColor.white.withAlphaComponent(0.28).cgColor)
+    context.setLineWidth(rect.width * 0.012)
+    context.strokeEllipse(in: CGRect(
+        x: -orbitRadius, y: -orbitRadius,
+        width: orbitRadius * 2, height: orbitRadius * 2
+    ))
+    // A small satellite dot on the ring.
+    let dotRadius = rect.width * 0.030
+    context.setFillColor(NSColor(calibratedRed: 0.78, green: 0.68, blue: 1.0, alpha: 1).cgColor)
+    context.fillEllipse(in: CGRect(
+        x: orbitRadius * cos(2.45) - dotRadius,
+        y: orbitRadius * sin(2.45) - dotRadius,
+        width: dotRadius * 2, height: dotRadius * 2
+    ))
+    context.restoreGState()
+
+    // Waveform glyph: five rounded bars with a violet glow. Kept large so it
+    // still reads at 16px in Spotlight and Finder lists.
+    let barHeights: [CGFloat] = [0.22, 0.40, 0.58, 0.34, 0.18]
+    let barWidth = rect.width * 0.078
+    let barGap = rect.width * 0.054
     let totalWidth = barWidth * CGFloat(barHeights.count) + barGap * CGFloat(barHeights.count - 1)
     var x = rect.midX - totalWidth / 2
     context.setFillColor(NSColor.white.cgColor)
     context.setShadow(
         offset: .zero,
-        blur: size * 0.012,
-        color: NSColor.black.withAlphaComponent(0.25).cgColor
+        blur: size * 0.028,
+        color: NSColor(calibratedRed: 0.72, green: 0.55, blue: 1.0, alpha: 0.9).cgColor
     )
     for height in barHeights {
         let barHeight = rect.height * height
@@ -87,6 +130,7 @@ func drawIcon(size: CGFloat) -> NSImage {
         context.fillPath()
         x += barWidth + barGap
     }
+
     context.restoreGState()
 
     image.unlockFocus()
