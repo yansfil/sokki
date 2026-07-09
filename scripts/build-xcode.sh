@@ -8,8 +8,8 @@ if ! xcodebuild -version >/dev/null 2>&1; then
 fi
 
 xcodebuild \
-  -project VoiceSlave.xcodeproj \
-  -scheme VoiceSlave \
+  -project Sokki.xcodeproj \
+  -scheme Sokki \
   -configuration Release \
   -destination 'platform=macOS' \
   -derivedDataPath .build/xcode-derived \

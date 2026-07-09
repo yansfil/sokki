@@ -7,13 +7,13 @@ if ! xcodebuild -version >/dev/null 2>&1; then
   exit 1
 fi
 
-ARCHIVE_PATH="${ARCHIVE_PATH:-dist/VoiceSlave.xcarchive}"
+ARCHIVE_PATH="${ARCHIVE_PATH:-dist/Sokki.xcarchive}"
 EXPORT_PATH="${EXPORT_PATH:-dist/xcode-export}"
 
 mkdir -p dist
 xcodebuild \
-  -project VoiceSlave.xcodeproj \
-  -scheme VoiceSlave \
+  -project Sokki.xcodeproj \
+  -scheme Sokki \
   -configuration Release \
   -destination 'generic/platform=macOS' \
   -archivePath "$ARCHIVE_PATH" \

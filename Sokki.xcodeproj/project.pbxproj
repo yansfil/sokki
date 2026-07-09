@@ -18,9 +18,9 @@
 		A10000000000000000000107 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000107 /* RecordingCoordinator.swift */; };
 		A10000000000000000000108 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000108 /* SettingsView.swift */; };
 		A10000000000000000000109 /* SpeechEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000109 /* SpeechEngine.swift */; };
-		A10000000000000000000003 /* VoiceSlaveCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* VoiceSlaveCore.swift */; };
-		A10000000000000000000004 /* VoiceSlaveCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* VoiceSlaveCore.framework */; };
-		A10000000000000000000005 /* VoiceSlaveCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* VoiceSlaveCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000003 /* SokkiCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* SokkiCore.swift */; };
+		A10000000000000000000004 /* SokkiCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* SokkiCore.framework */; };
+		A10000000000000000000005 /* SokkiCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* SokkiCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000006 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* AppIcon.icns */; };
 		A10000000000000000000007 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = AB0000000000000000000002 /* WhisperKit */; };
 /* End PBXBuildFile section */
@@ -31,7 +31,7 @@
 			containerPortal = A90000000000000000000001 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A40000000000000000000002;
-			remoteInfo = VoiceSlaveCore;
+			remoteInfo = SokkiCore;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -42,7 +42,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A10000000000000000000005 /* VoiceSlaveCore.framework in Embed Frameworks */,
+				A10000000000000000000005 /* SokkiCore.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -61,11 +61,11 @@
 		A20000000000000000000107 /* RecordingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCoordinator.swift; sourceTree = "<group>"; };
 		A20000000000000000000108 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A20000000000000000000109 /* SpeechEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechEngine.swift; sourceTree = "<group>"; };
-		A20000000000000000000003 /* VoiceSlaveCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSlaveCore.swift; sourceTree = "<group>"; };
-		A20000000000000000000004 /* VoiceSlaveCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = VoiceSlaveCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A20000000000000000000005 /* VoiceSlave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceSlave.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000003 /* SokkiCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SokkiCore.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* SokkiCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SokkiCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000005 /* Sokki.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sokki.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A20000000000000000000007 /* VoiceSlave.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VoiceSlave.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000007 /* Sokki.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sokki.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000008 /* ExportOptions.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ExportOptions.plist; sourceTree = "<group>"; };
 		A20000000000000000000009 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,7 +75,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000004 /* VoiceSlaveCore.framework in Frameworks */,
+				A10000000000000000000004 /* SokkiCore.framework in Frameworks */,
 				A10000000000000000000007 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,13 +102,13 @@
 		A70000000000000000000002 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				A70000000000000000000003 /* VoiceSlave */,
-				A70000000000000000000004 /* VoiceSlaveCore */,
+				A70000000000000000000003 /* Sokki */,
+				A70000000000000000000004 /* SokkiCore */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		A70000000000000000000003 /* VoiceSlave */ = {
+		A70000000000000000000003 /* Sokki */ = {
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000001 /* main.swift */,
@@ -123,22 +123,22 @@
 				A20000000000000000000108 /* SettingsView.swift */,
 				A20000000000000000000109 /* SpeechEngine.swift */,
 			);
-			path = VoiceSlave;
+			path = Sokki;
 			sourceTree = "<group>";
 		};
-		A70000000000000000000004 /* VoiceSlaveCore */ = {
+		A70000000000000000000004 /* SokkiCore */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000003 /* VoiceSlaveCore.swift */,
+				A20000000000000000000003 /* SokkiCore.swift */,
 			);
-			path = VoiceSlaveCore;
+			path = SokkiCore;
 			sourceTree = "<group>";
 		};
 		A70000000000000000000005 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000005 /* VoiceSlave.app */,
-				A20000000000000000000004 /* VoiceSlaveCore.framework */,
+				A20000000000000000000005 /* Sokki.app */,
+				A20000000000000000000004 /* SokkiCore.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -147,7 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000006 /* Info.plist */,
-				A20000000000000000000007 /* VoiceSlave.entitlements */,
+				A20000000000000000000007 /* Sokki.entitlements */,
 				A20000000000000000000008 /* ExportOptions.plist */,
 				A20000000000000000000009 /* AppIcon.icns */,
 			);
@@ -157,9 +157,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A40000000000000000000001 /* VoiceSlave */ = {
+		A40000000000000000000001 /* Sokki */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A80000000000000000000001 /* Build configuration list for PBXNativeTarget "VoiceSlave" */;
+			buildConfigurationList = A80000000000000000000001 /* Build configuration list for PBXNativeTarget "Sokki" */;
 			buildPhases = (
 				A60000000000000000000001 /* Frameworks */,
 				A50000000000000000000001 /* Embed Frameworks */,
@@ -171,17 +171,17 @@
 			dependencies = (
 				A30000000000000000000002 /* PBXTargetDependency */,
 			);
-			name = VoiceSlave;
+			name = Sokki;
 			packageProductDependencies = (
 				AB0000000000000000000002 /* WhisperKit */,
 			);
-			productName = VoiceSlave;
-			productReference = A20000000000000000000005 /* VoiceSlave.app */;
+			productName = Sokki;
+			productReference = A20000000000000000000005 /* Sokki.app */;
 			productType = "com.apple.product-type.application";
 		};
-		A40000000000000000000002 /* VoiceSlaveCore */ = {
+		A40000000000000000000002 /* SokkiCore */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A80000000000000000000002 /* Build configuration list for PBXNativeTarget "VoiceSlaveCore" */;
+			buildConfigurationList = A80000000000000000000002 /* Build configuration list for PBXNativeTarget "SokkiCore" */;
 			buildPhases = (
 				A60000000000000000000004 /* Sources */,
 				A60000000000000000000002 /* Frameworks */,
@@ -190,9 +190,9 @@
 			);
 			dependencies = (
 			);
-			name = VoiceSlaveCore;
-			productName = VoiceSlaveCore;
-			productReference = A20000000000000000000004 /* VoiceSlaveCore.framework */;
+			name = SokkiCore;
+			productName = SokkiCore;
+			productReference = A20000000000000000000004 /* SokkiCore.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -213,7 +213,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A80000000000000000000003 /* Build configuration list for PBXProject "VoiceSlave" */;
+			buildConfigurationList = A80000000000000000000003 /* Build configuration list for PBXProject "Sokki" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -229,8 +229,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A40000000000000000000001 /* VoiceSlave */,
-				A40000000000000000000002 /* VoiceSlaveCore */,
+				A40000000000000000000001 /* Sokki */,
+				A40000000000000000000002 /* SokkiCore */,
 			);
 		};
 /* End PBXProject section */
@@ -269,7 +269,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000003 /* VoiceSlaveCore.swift in Sources */,
+				A10000000000000000000003 /* SokkiCore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,7 +278,7 @@
 /* Begin PBXTargetDependency section */
 		A30000000000000000000002 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A40000000000000000000002 /* VoiceSlaveCore */;
+			target = A40000000000000000000002 /* SokkiCore */;
 			targetProxy = A30000000000000000000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -421,7 +421,7 @@
 		A80000000000000000000006 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AppResources/VoiceSlave.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AppResources/Sokki.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -431,7 +431,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.VoiceSlave;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.Sokki;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 			};
@@ -440,7 +440,7 @@
 		A80000000000000000000007 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AppResources/VoiceSlave.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AppResources/Sokki.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -450,7 +450,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.VoiceSlave;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.Sokki;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 			};
@@ -464,7 +464,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				INSTALL_PATH = "@rpath";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.VoiceSlaveCore;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.SokkiCore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 6.0;
@@ -479,7 +479,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				INSTALL_PATH = "@rpath";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.VoiceSlaveCore;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hoyeon.SokkiCore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 6.0;
@@ -489,7 +489,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A80000000000000000000001 /* Build configuration list for PBXNativeTarget "VoiceSlave" */ = {
+		A80000000000000000000001 /* Build configuration list for PBXNativeTarget "Sokki" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A80000000000000000000006 /* Debug */,
@@ -498,7 +498,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A80000000000000000000002 /* Build configuration list for PBXNativeTarget "VoiceSlaveCore" */ = {
+		A80000000000000000000002 /* Build configuration list for PBXNativeTarget "SokkiCore" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A80000000000000000000008 /* Debug */,
@@ -507,7 +507,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A80000000000000000000003 /* Build configuration list for PBXProject "VoiceSlave" */ = {
+		A80000000000000000000003 /* Build configuration list for PBXProject "Sokki" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A80000000000000000000004 /* Debug */,

@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import VoiceSlaveCore
+import SokkiCore
 
 /// First-run window: grant permissions, learn the shortcut, try a dictation
 /// into the built-in test field — all on one screen.
@@ -21,7 +21,7 @@ struct OnboardingView: View {
                     .font(.system(size: 44))
                     .foregroundStyle(.white, .tint)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("VoiceSlave")
+                    Text("Sokki")
                         .font(.title.bold())
                     Text("Press \(shortcutDisplay) anywhere, speak, press it again — your words appear at the cursor.")
                         .foregroundStyle(.secondary)
@@ -70,7 +70,7 @@ struct OnboardingView: View {
                     .font(.caption)
                     .foregroundStyle(model.permissions.canDictate ? .green : .secondary)
                 Spacer()
-                Button("Start using VoiceSlave") {
+                Button("Start using Sokki") {
                     model.state.hasCompletedOnboarding = true
                     onDone()
                 }

@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import VoiceSlaveCore
+import SokkiCore
 
 enum SettingsTab: Hashable {
     case general
@@ -235,7 +235,7 @@ private struct VocabularyTab: View {
             }
             Section("Replacements") {
                 if entries.isEmpty {
-                    Text("No entries yet — e.g. “보이스 슬레이브” → “VoiceSlave”")
+                    Text("No entries yet — e.g. “속기” → “Sokki”")
                         .foregroundStyle(.secondary)
                 }
                 ForEach($entries) { $entry in
@@ -480,7 +480,7 @@ struct SetupTab: View {
                 PermissionsSection(model: model)
             }
             Section {
-                Text("The global shortcut works without any permissions. Microphone + Speech Recognition are needed to dictate; Accessibility lets VoiceSlave paste the result directly at your cursor. Without Accessibility, results are copied to the clipboard instead.")
+                Text("The global shortcut works without any permissions. Microphone + Speech Recognition are needed to dictate; Accessibility lets Sokki paste the result directly at your cursor. Without Accessibility, results are copied to the clipboard instead.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -1,9 +1,9 @@
 import Foundation
-import VoiceSlaveCore
+import SokkiCore
 import WhisperKit
 import os
 
-private let whisperLog = Logger(subsystem: "com.hoyeon.VoiceSlave", category: "whisper")
+private let whisperLog = Logger(subsystem: "com.hoyeon.Sokki", category: "whisper")
 
 /// Moves the non-Sendable WhisperKit pipeline across the actor boundary once,
 /// right after construction — safe because nothing else references it yet.
@@ -38,7 +38,7 @@ final class WhisperEngine: ObservableObject {
 
     init() {
         let root = (try? ApplicationSupport.defaultRoot())
-            ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("VoiceSlave")
+            ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Sokki")
         downloadBase = root.appendingPathComponent("WhisperModels", isDirectory: true)
         state = modelFolder != nil ? .downloaded : .notDownloaded
     }

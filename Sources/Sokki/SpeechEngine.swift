@@ -3,7 +3,7 @@ import Foundation
 import Speech
 import os
 
-private let speechLog = Logger(subsystem: "com.hoyeon.VoiceSlave", category: "speech")
+private let speechLog = Logger(subsystem: "com.hoyeon.Sokki", category: "speech")
 
 enum SpeechSessionError: LocalizedError {
     case recognizerUnavailable(String)

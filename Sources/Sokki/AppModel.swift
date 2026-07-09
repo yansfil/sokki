@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 import Speech
-import VoiceSlaveCore
+import SokkiCore
 
 /// Persisted settings + shared stores + permission snapshot for the whole app.
 @MainActor
@@ -114,7 +114,7 @@ final class AppModel: ObservableObject {
 }
 
 struct UserDefaultsSettingsStore {
-    private let key = "VoiceSlave.AppSettings.v1"
+    private let key = "Sokki.AppSettings.v1"
 
     func load() -> AppSettings {
         guard let data = UserDefaults.standard.data(forKey: key),

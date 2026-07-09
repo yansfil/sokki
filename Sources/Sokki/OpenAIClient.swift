@@ -1,5 +1,5 @@
 import Foundation
-import VoiceSlaveCore
+import SokkiCore
 
 enum OpenAIClientError: LocalizedError {
     case badResponse(Int, String)

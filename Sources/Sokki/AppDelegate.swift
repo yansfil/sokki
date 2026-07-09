@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
-import VoiceSlaveCore
+import SokkiCore
 
 @MainActor
-final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class SokkiAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
     private var onboardingWindow: NSWindow?
@@ -79,7 +79,7 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelega
         if FnKeyMonitor.hasPermission {
             model.fnTriggerStatus = fnMonitor.start()
                 ? "Active: 🌐 fn (tap to toggle, hold to talk)"
-                : "Couldn't start the fn key listener — try relaunching VoiceSlave"
+                : "Couldn't start the fn key listener — try relaunching Sokki"
         } else {
             MacPermissionReader().promptForAccessibility()
             model.fnTriggerStatus = "Grant Accessibility in System Settings → Privacy & Security, then flip this switch again"
@@ -90,7 +90,7 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelega
 
     private func installMenuBar() {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.toolTip = "VoiceSlave"
+        statusItem.button?.toolTip = "Sokki"
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
@@ -185,7 +185,7 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelega
         menu.addItem(setupItem)
 
         menu.addItem(.separator())
-        let quitItem = NSMenuItem(title: "Quit VoiceSlave", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit Sokki", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
@@ -212,7 +212,7 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelega
     }
 
     private func statusSymbol(_ name: String, color: NSColor?) -> NSImage? {
-        guard var image = NSImage(systemSymbolName: name, accessibilityDescription: "VoiceSlave") else {
+        guard var image = NSImage(systemSymbolName: name, accessibilityDescription: "Sokki") else {
             return nil
         }
         if let color {
@@ -280,7 +280,7 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelega
                 defer: false
             )
             window.isReleasedWhenClosed = false
-            window.title = "VoiceSlave Settings"
+            window.title = "Sokki Settings"
             window.contentView = NSHostingView(rootView: SettingsRootView(model: model, router: router))
             window.center()
             settingsWindow = window
@@ -298,7 +298,7 @@ final class VoiceSlaveAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelega
                 defer: false
             )
             window.isReleasedWhenClosed = false
-            window.title = "Welcome to VoiceSlave"
+            window.title = "Welcome to Sokki"
             window.contentView = NSHostingView(rootView: OnboardingView(model: model) { [weak self] in
                 self?.onboardingWindow?.close()
             })
