@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-swift run VoiceSlave --qa-smoke
+swift run Sokki --qa-smoke

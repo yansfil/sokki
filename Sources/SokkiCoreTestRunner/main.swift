@@ -1,5 +1,5 @@
 import Foundation
-import VoiceSlaveCore
+import SokkiCore
 
 struct TestFailure: Error, CustomStringConvertible {
     var description: String
@@ -13,7 +13,7 @@ func require(_ condition: Bool, _ message: String) throws {
 
 func temporaryDirectory() throws -> URL {
     let url = URL(fileURLWithPath: NSTemporaryDirectory())
-        .appendingPathComponent("VoiceSlaveTests-\(UUID().uuidString)", isDirectory: true)
+        .appendingPathComponent("SokkiTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
 }
@@ -53,8 +53,8 @@ final class FakeInserter: TextInsertionClient {
 
 let tests: [(String, () throws -> Void)] = [
     ("local cleanup preserves Korean-English-code mixing", {
-        let output = LocalCleanupProcessor().clean("  안녕 VoiceSlave\n\nlet value = 1  ")
-        try require(output == "안녕 VoiceSlave\nlet value = 1", "cleanup output mismatch")
+        let output = LocalCleanupProcessor().clean("  안녕 Sokki\n\nlet value = 1  ")
+        try require(output == "안녕 Sokki\nlet value = 1", "cleanup output mismatch")
     }),
     ("mode gating keeps dictation local and cloud modes key-gated", {
         let gate = ModeGate()
@@ -67,13 +67,13 @@ let tests: [(String, () throws -> Void)] = [
         let request = OpenAIRequestBuilder().build(
             mode: .cleanup,
             rawTranscript: "회의 말고 dictation 테스트",
-            vocabulary: [VocabularyEntry(spokenHint: "보이스 슬레이브", preferredSpelling: "VoiceSlave")]
+            vocabulary: [VocabularyEntry(spokenHint: "속기", preferredSpelling: "Sokki")]
         )
         guard let request else { throw TestFailure(description: "request missing") }
         let body = String(describing: request.body)
         try require(request.model == "gpt-5.4-nano", "default model mismatch")
         try require(body.contains("회의 말고 dictation 테스트"), "raw transcript missing")
-        try require(body.contains("VoiceSlave"), "vocabulary hint missing")
+        try require(body.contains("Sokki"), "vocabulary hint missing")
         try require(!body.localizedCaseInsensitiveContains("clipboard"), "clipboard leaked")
         try require(!body.localizedCaseInsensitiveContains("selected text"), "selected text leaked")
         try require(!body.localizedCaseInsensitiveContains("active app"), "active app leaked")
@@ -187,27 +187,27 @@ let tests: [(String, () throws -> Void)] = [
     }),
     ("replacement engine applies vocabulary case-insensitively", {
         let vocabulary = [
-            VocabularyEntry(spokenHint: "보이스 슬레이브", preferredSpelling: "VoiceSlave"),
+            VocabularyEntry(spokenHint: "속기", preferredSpelling: "Sokki"),
             VocabularyEntry(spokenHint: "open ai", preferredSpelling: "OpenAI")
         ]
-        let output = ReplacementEngine().apply("보이스 슬레이브 연동은 Open AI 기반", vocabulary: vocabulary)
-        try require(output == "VoiceSlave 연동은 OpenAI 기반", "replacement mismatch: \(output)")
+        let output = ReplacementEngine().apply("속기 연동은 Open AI 기반", vocabulary: vocabulary)
+        try require(output == "Sokki 연동은 OpenAI 기반", "replacement mismatch: \(output)")
     }),
     ("pipeline applies replacements in local dictation mode", {
         let result = DictationPipeline().process(
-            rawTranscript: "  보이스 슬레이브 테스트  ",
+            rawTranscript: "  속기 테스트  ",
             mode: .dictation,
             apiKeyState: .absent,
-            vocabulary: [VocabularyEntry(spokenHint: "보이스 슬레이브", preferredSpelling: "VoiceSlave")]
+            vocabulary: [VocabularyEntry(spokenHint: "속기", preferredSpelling: "Sokki")]
         )
-        try require(result.finalOutput == "VoiceSlave 테스트", "dictation replacement mismatch: \(result.finalOutput)")
+        try require(result.finalOutput == "Sokki 테스트", "dictation replacement mismatch: \(result.finalOutput)")
         try require(result.status == .inserted, "dictation status mismatch")
     }),
     ("settings decode tolerates missing new fields", {
         let legacyJSON = """
         {"launchAtLogin":false,"preloadModel":true,"typingModeEnabled":false,
          "selectedMode":"Dictation","openAIModel":"gpt-5.4-nano","qualityModel":"gpt-5.4-mini",
-         "globalShortcut":"control+option+space","bundleIdentifier":"com.hoyeon.VoiceSlave"}
+         "globalShortcut":"control+option+space","bundleIdentifier":"com.hoyeon.Sokki"}
         """
         let settings = try JSONDecoder().decode(AppSettings.self, from: Data(legacyJSON.utf8))
         try require(settings.launchAtLogin == false, "legacy field lost")
@@ -233,7 +233,7 @@ for (name, test) in tests {
 }
 
 if failures.isEmpty {
-    print("VoiceSlaveCoreTestRunner: \(tests.count) passed")
+    print("SokkiCoreTestRunner: \(tests.count) passed")
 } else {
     for failure in failures {
         print(failure)

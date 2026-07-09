@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A40000000000000000000001"
-               BuildableName = "VoiceSlave.app"
-               BlueprintName = "VoiceSlave"
-               ReferencedContainer = "container:VoiceSlave.xcodeproj">
+               BuildableName = "Sokki.app"
+               BlueprintName = "Sokki"
+               ReferencedContainer = "container:Sokki.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -37,9 +37,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A40000000000000000000001"
-            BuildableName = "VoiceSlave.app"
-            BlueprintName = "VoiceSlave"
-            ReferencedContainer = "container:VoiceSlave.xcodeproj">
+            BuildableName = "Sokki.app"
+            BlueprintName = "Sokki"
+            ReferencedContainer = "container:Sokki.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -54,9 +54,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A40000000000000000000001"
-            BuildableName = "VoiceSlave.app"
-            BlueprintName = "VoiceSlave"
-            ReferencedContainer = "container:VoiceSlave.xcodeproj">
+            BuildableName = "Sokki.app"
+            BlueprintName = "Sokki"
+            ReferencedContainer = "container:Sokki.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 CONFIGURATION="${CONFIGURATION:-release}"
-APP_NAME="VoiceSlave"
+APP_NAME="Sokki"
 DIST_DIR="${DIST_DIR:-dist}"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
 EXECUTABLE=".build/$CONFIGURATION/$APP_NAME"
@@ -20,13 +20,13 @@ from pathlib import Path
 source = Path("AppResources/Info.plist").read_text()
 replacements = {
     "$(DEVELOPMENT_LANGUAGE)": "en",
-    "$(EXECUTABLE_NAME)": "VoiceSlave",
-    "$(PRODUCT_BUNDLE_IDENTIFIER)": "com.hoyeon.VoiceSlave",
-    "$(PRODUCT_NAME)": "VoiceSlave",
+    "$(EXECUTABLE_NAME)": "Sokki",
+    "$(PRODUCT_BUNDLE_IDENTIFIER)": "com.hoyeon.Sokki",
+    "$(PRODUCT_NAME)": "Sokki",
 }
 for old, new in replacements.items():
     source = source.replace(old, new)
-Path("dist/VoiceSlave.app/Contents/Info.plist").write_text(source)
+Path("dist/Sokki.app/Contents/Info.plist").write_text(source)
 PY
 
 cat > "$APP_DIR/Contents/PkgInfo" <<'EOF'
@@ -36,8 +36,8 @@ EOF
 cp AppResources/AppIcon.icns "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 codesign --force --sign - \
-  --entitlements AppResources/VoiceSlave.entitlements \
-  --identifier com.hoyeon.VoiceSlave \
+  --entitlements AppResources/Sokki.entitlements \
+  --identifier com.hoyeon.Sokki \
   "$APP_DIR"
 
 echo "$APP_DIR"

@@ -6,7 +6,7 @@ import Foundation
 import Security
 import ServiceManagement
 import Speech
-import VoiceSlaveCore
+import SokkiCore
 
 struct KeyboardShortcut: Equatable {
     let keyCode: UInt16
@@ -204,7 +204,7 @@ struct LaunchAtLoginController {
 }
 
 final class KeychainAPIKeyStore {
-    private let service = "com.hoyeon.VoiceSlave.openai"
+    private let service = "com.hoyeon.Sokki.openai"
     private let account = "OpenAI API Key"
 
     func save(_ key: String) throws {

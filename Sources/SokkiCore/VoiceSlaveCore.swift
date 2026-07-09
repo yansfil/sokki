@@ -54,7 +54,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         retentionDays: Int? = 30,
         globalShortcut: String = "control+option+space",
         fnKeyTrigger: Bool = false,
-        bundleIdentifier: String = "com.hoyeon.VoiceSlave",
+        bundleIdentifier: String = "com.hoyeon.Sokki",
         localeIdentifier: String = "auto",
         preferOnDevice: Bool = true,
         transcriptionEngine: String = "apple",
@@ -289,7 +289,7 @@ public final class HistoryStore: @unchecked Sendable {
 
     public init(root: URL) throws {
         self.root = root
-        self.databaseURL = root.appendingPathComponent("VoiceSlave.sqlite")
+        self.databaseURL = root.appendingPathComponent("Sokki.sqlite")
         self.audioDirectory = root.appendingPathComponent("Audio", isDirectory: true)
         try FileManager.default.createDirectory(at: audioDirectory, withIntermediateDirectories: true)
         try Self.excludeFromBackup(root)
@@ -775,7 +775,7 @@ public enum ApplicationSupport {
             appropriateFor: nil,
             create: true
         )
-        let root = base.appendingPathComponent("VoiceSlave", isDirectory: true)
+        let root = base.appendingPathComponent("Sokki", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root
     }

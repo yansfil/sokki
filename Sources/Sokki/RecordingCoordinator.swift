@@ -1,7 +1,7 @@
 import AppKit
 import ApplicationServices
 import Foundation
-import VoiceSlaveCore
+import SokkiCore
 
 /// Drives the whole dictation lifecycle:
 /// hotkey → record (live partials + levels) → transcribe → post-process →

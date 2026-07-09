@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
-import VoiceSlaveCore
+import SokkiCore
 
-/// Floating recording pill at the bottom-center of the active screen.
+/// Floating recording pill at the top-center of the active screen.
 /// Uses a non-activating panel so keyboard focus stays in the target app —
 /// required for paste-at-cursor to land in the right place.
 @MainActor
@@ -52,7 +52,8 @@ final class HUDController {
             ?? NSScreen.main
         guard let frame = screen?.visibleFrame else { return }
         let x = frame.midX - Self.panelSize.width / 2
-        let y = frame.minY + 24
+        // Top-center, just below the menu bar (visibleFrame already excludes it).
+        let y = frame.maxY - Self.panelSize.height - 16
         panel.setFrame(NSRect(origin: NSPoint(x: x, y: y), size: Self.panelSize), display: true)
     }
 }
@@ -62,12 +63,12 @@ struct HUDView: View {
 
     var body: some View {
         VStack {
-            Spacer(minLength: 0)
             pill
                 .animation(.easeOut(duration: 0.18), value: coordinator.phase)
                 .animation(.easeOut(duration: 0.18), value: coordinator.partialText.isEmpty)
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     @ViewBuilder
