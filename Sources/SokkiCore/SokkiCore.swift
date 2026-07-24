@@ -375,6 +375,30 @@ public final class HistoryStore: @unchecked Sendable {
         return expired.count
     }
 
+    /// Deletes audio files no history record references. Crashed or
+    /// unrecorded dictations otherwise leak their .caf forever, because
+    /// retention only deletes through records. Files younger than `minAge`
+    /// are kept — a dictation in progress has a file but no record yet.
+    @discardableResult
+    public func sweepOrphanedAudio(minAge: TimeInterval = 3600, now: Date = Date()) throws -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        let referenced = Set(try all().map(\.audioFileName).filter { !$0.isEmpty })
+        let onDisk = (try? FileManager.default.contentsOfDirectory(
+            at: audioDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey]
+        )) ?? []
+        var removed = 0
+        for url in onDisk where !referenced.contains(url.lastPathComponent) {
+            let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            guard now.timeIntervalSince(modified) >= minAge else { continue }
+            try? FileManager.default.removeItem(at: url)
+            removed += 1
+        }
+        return removed
+    }
+
     public static func excludeFromBackup(_ url: URL) throws {
         var mutableURL = url
         var values = URLResourceValues()
