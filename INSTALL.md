@@ -31,26 +31,18 @@ required.
 ## Install from a GitHub Release (preferred)
 
 ```bash
-cd "$(mktemp -d)"
-gh release download --repo yansfil/sokki --pattern "*.dmg" || {
-  curl -fsSL -o Sokki.dmg "$(curl -fsSL https://api.github.com/repos/yansfil/sokki/releases/latest \
-    | /usr/bin/python3 -c 'import json,sys; print([a["browser_download_url"] for a in json.load(sys.stdin)["assets"] if a["name"].endswith(".dmg")][0])')"
-}
-DMG="$(ls *.dmg | head -1)"
-MOUNT="$(hdiutil attach "$DMG" -nobrowse | awk -F'\t' '/\/Volumes\//{print $NF}' | head -1)"
-osascript -e 'quit app "Sokki"' 2>/dev/null; sleep 1
-rm -rf /Applications/Sokki.app
-ditto "$MOUNT/Sokki.app" /Applications/Sokki.app
-hdiutil detach "$MOUNT" >/dev/null
-xattr -dr com.apple.quarantine /Applications/Sokki.app
-/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Sokki.app
-open /Applications/Sokki.app
+curl -fsSL https://raw.githubusercontent.com/modakbul-gongbang/sokki/main/scripts/install.sh | bash
 ```
 
-The `xattr` line matters: release builds are ad-hoc signed (not notarized
-yet), so without it Gatekeeper blocks the first launch. If the user prefers
-not to strip quarantine, they can right-click `/Applications/Sokki.app` →
-Open → Open once instead.
+The script downloads the latest release DMG, installs to
+`/Applications/Sokki.app`, clears any quarantine flag, and launches the app.
+Quarantine matters because release builds are ad-hoc signed (not notarized
+yet): a browser-downloaded DMG is blocked by Gatekeeper on first launch. A
+terminal download via this script carries no quarantine flag, so no dialog
+appears. If the user installed by dragging a browser-downloaded DMG instead
+and macOS says the app is damaged, run
+`xattr -dr com.apple.quarantine /Applications/Sokki.app` (or right-click →
+Open → Open once).
 
 ## Install from source
 
@@ -59,7 +51,7 @@ INSTALL_DIR="${SOKKI_DIR:-$HOME/projects/sokki}"
 if [ -d "$INSTALL_DIR/.git" ]; then
   git -C "$INSTALL_DIR" pull --ff-only
 else
-  git clone https://github.com/yansfil/sokki "$INSTALL_DIR"
+  git clone https://github.com/modakbul-gongbang/sokki "$INSTALL_DIR"
 fi
 cd "$INSTALL_DIR"
 ./scripts/package-app.sh
