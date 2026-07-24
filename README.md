@@ -57,19 +57,30 @@ Sokki is built for exactly that speech, and everything runs on your Mac.
 
 ## Install
 
+**One line** — paste this in Terminal (no Xcode or clone needed):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/modakbul-gongbang/sokki/main/scripts/install.sh | bash
+```
+
+It downloads the latest release DMG, installs to `/Applications`, and
+launches the app — no Gatekeeper "damaged app" dialog, because a terminal
+download carries no quarantine flag.
+
 **The lazy way** — tell your AI agent (Claude Code, Codex, …):
 
-> Install Sokki by following https://github.com/yansfil/sokki/blob/main/INSTALL.md
+> Install Sokki by following https://github.com/modakbul-gongbang/sokki/blob/main/INSTALL.md
 
 [`INSTALL.md`](INSTALL.md) is written as an agent install contract: the agent
 does everything end to end and only stops where macOS requires *you* to click
 (permission prompts).
 
-**By hand** — grab the DMG from the [latest release](https://github.com/yansfil/sokki/releases/latest),
-drag `Sokki.app` into Applications, and launch. Or build from source:
+**By hand** — grab the DMG from the [latest release](https://github.com/modakbul-gongbang/sokki/releases/latest),
+drag `Sokki.app` into Applications, and launch (see the unsigned build note
+below). Or build from source:
 
 ```sh
-git clone https://github.com/yansfil/sokki.git
+git clone https://github.com/modakbul-gongbang/sokki.git
 cd sokki
 ./scripts/package-app.sh
 ditto dist/Sokki.app /Applications/Sokki.app
